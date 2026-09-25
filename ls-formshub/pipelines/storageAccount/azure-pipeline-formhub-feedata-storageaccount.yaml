@@ -1,0 +1,51 @@
+name: formhub-feedata-seed
+
+# Manual trigger only - run after infra deployment when fee values change.
+trigger: none
+
+parameters:
+  - name: environment
+    displayName: Environment
+    type: string
+    values:
+      - dev
+      - sit
+      - uat
+      - prd
+
+variables:
+  - group: Integration-ServiceConnections
+  - ${{ if eq(parameters.environment, 'dev') }}:
+      - group: Integration-dev
+      - name: storageAccountName
+        value: azaestformshubdev
+      - name: serviceConnection
+        value: $(serviceConnection-dev)
+  - ${{ if eq(parameters.environment, 'sit') }}:
+      - group: Integration-sit
+      - name: storageAccountName
+        value: azaestformshubsit
+      - name: serviceConnection
+        value: $(serviceConnection-sit)
+  - ${{ if eq(parameters.environment, 'uat') }}:
+      - group: Integration-uat
+      - name: storageAccountName
+        value: azaestformshubuat
+      - name: serviceConnection
+        value: $(serviceConnection-uat)
+  - ${{ if eq(parameters.environment, 'prd') }}:
+      - group: Integration-prd
+      - name: storageAccountName
+        value: azaestformshubprd
+      - name: serviceConnection
+        value: $(serviceConnection-prd)
+
+stages:
+  - stage: seed_fee_data
+    displayName: Seed Fee Rules - ${{ parameters.environment }}
+    jobs:
+      - template: './apps-pipeline-formhub-feedata-storageaccount-deploy.yaml'
+        parameters:
+          environment: ${{ parameters.environment }}
+          serviceConnection: $(serviceConnection)
+          storageAccountName: $(storageAccountName)

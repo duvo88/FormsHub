@@ -1,0 +1,180 @@
+name: formhub-backend-deployments
+
+trigger:
+  branches:
+    include:
+      - main
+      - features/*
+  paths:
+    include:
+      - ls-formshub/app/azure-pipeline-formhub-backend.yaml
+      - ls-formshub/app/az-ae-fa-formshub-functionapp/**
+      - ls-formshub/app/logicApp/**
+      - ls-formshub/pipelines/FunctionApp/**
+      - ls-formshub/pipelines/logicApp/**
+      - ls-formshub/pipelines/storageAccount/apps-pipeline-formhub-feedata-storageaccount-deploy.yaml
+      - ls-formshub/pipelines/storageAccount/seed-fee-rules-*.ps1
+    exclude:
+      - ls-formshub/app/web/**
+      - ls-formshub/pipelines/web/**
+
+pr: none
+
+variables:
+  - group: Integration-ServiceConnections
+
+stages:
+  # ==================== BUILD STAGE ====================
+  - stage: Build
+    displayName: Build Backend
+    jobs:
+      - job: BuildBackend
+        displayName: Build Function App & Logic App
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - checkout: self
+            clean: true
+
+          - task: UseDotNet@2
+            displayName: 'Use .NET 8 SDK'
+            inputs:
+              packageType: 'sdk'
+              version: '8.0.x'
+
+          - task: DotNetCoreCLI@2
+            displayName: Restore
+            inputs:
+              command: restore
+              projects: '**/apps.sln'
+
+          - task: DotNetCoreCLI@2
+            displayName: Build
+            inputs:
+              command: build
+              projects: '**/api.csproj'
+              arguments: '--configuration Release'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Run Unit Tests'
+            inputs:
+              command: test
+              projects: '**/FunctionApp.UnitTests.csproj'
+              arguments: '--configuration Release --logger trx --results-directory $(Build.ArtifactStagingDirectory)/TestResults'
+              publishTestResults: false
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Unit Test Results'
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: '$(Build.ArtifactStagingDirectory)/TestResults/**/*.trx'
+              testRunTitle: 'Function App Unit Tests'
+
+  # ==================== DEPLOY DEV ====================
+  - stage: DeployDEV
+    displayName: Deploy Backend (DEV)
+    dependsOn: Build
+    condition: succeeded()
+    variables:
+      - group: Integration-dev
+    jobs:
+      - template: '../pipelines/FunctionApp/apps-pipeline-az-ae-fa-formshub-functionapp-deploy.yaml'
+        parameters:
+          environment: 'dev'
+          serviceConnection: $(serviceConnection-dev)
+      - template: '../pipelines/logicApp/azure-pipeline-formhub-logicapps-deploy.yaml'
+        parameters:
+          environment: 'dev'
+          serviceConnection: $(serviceConnection-dev)
+          dependsOn:
+            - deploy_az_ae_fa_formshub_dotnet_func_apps
+      - template: '../pipelines/storageAccount/apps-pipeline-formhub-feedata-storageaccount-deploy.yaml'
+        parameters:
+          environment: 'dev'
+          serviceConnection: $(serviceConnection-dev)
+          storageAccountName: azaestformshubdev
+          condition: and(succeeded(), eq(variables['runFeeSeeding'], 'true'))
+          dependsOn:
+            - deploy_formhub_logicapp
+
+  # ==================== DEPLOY SIT ====================
+  - stage: DeploySIT
+    displayName: Deploy Backend (SIT)
+    dependsOn: []
+    condition: and(succeeded(),eq(variables['Build.Reason'], 'Manual'))
+    variables:
+      - group: Integration-sit   
+    jobs:
+      - template: '../pipelines/FunctionApp/apps-pipeline-az-ae-fa-formshub-functionapp-deploy.yaml'
+        parameters:
+          environment: 'sit'
+          serviceConnection: $(serviceConnection-sit)
+      - template: '../pipelines/logicApp/azure-pipeline-formhub-logicapps-deploy.yaml'
+        parameters:
+          environment: 'sit'
+          serviceConnection: $(serviceConnection-sit)
+          dependsOn:
+            - deploy_az_ae_fa_formshub_dotnet_func_apps
+      - template: '../pipelines/storageAccount/apps-pipeline-formhub-feedata-storageaccount-deploy.yaml'
+        parameters:
+          environment: 'sit'
+          serviceConnection: $(serviceConnection-sit)
+          storageAccountName: azaestformshubsit
+          condition: and(succeeded(), eq(variables['runFeeSeeding'], 'true'))
+          dependsOn:
+            - deploy_formhub_logicapp
+
+  # ==================== DEPLOY UAT ====================
+  - stage: DeployUAT
+    displayName: Deploy Backend (UAT)
+    dependsOn: []
+    condition: and(succeeded(),eq(variables['Build.Reason'], 'Manual'))  
+    variables:
+      - group: Integration-uat
+    jobs:
+      - template: '../pipelines/FunctionApp/apps-pipeline-az-ae-fa-formshub-functionapp-deploy.yaml'
+        parameters:
+          environment: 'uat'
+          serviceConnection: $(serviceConnection-uat)
+      - template: '../pipelines/logicApp/azure-pipeline-formhub-logicapps-deploy.yaml'
+        parameters:
+          environment: 'uat'
+          serviceConnection: $(serviceConnection-uat)
+          dependsOn:
+            - deploy_az_ae_fa_formshub_dotnet_func_apps
+      - template: '../pipelines/storageAccount/apps-pipeline-formhub-feedata-storageaccount-deploy.yaml'
+        parameters:
+          environment: 'uat'
+          serviceConnection: $(serviceConnection-uat)
+          storageAccountName: azaestformshubuat
+          condition: and(succeeded(), eq(variables['runFeeSeeding'], 'true'))
+          dependsOn:
+            - deploy_formhub_logicapp
+
+  # ==================== DEPLOY PRD ====================
+  - stage: DeployPRD
+    displayName: Deploy Backend (PRD)
+    dependsOn: []
+    condition: and(succeeded(),eq(variables['Build.Reason'], 'Manual'))  
+    variables:
+      - group: Integration-prd
+    jobs:
+      - template: '../pipelines/FunctionApp/apps-pipeline-az-ae-fa-formshub-functionapp-deploy.yaml'
+        parameters:
+          environment: 'prd'
+          serviceConnection: $(serviceConnection-prd)
+      - template: '../pipelines/logicApp/azure-pipeline-formhub-logicapps-deploy.yaml'
+        parameters:
+          environment: 'prd'
+          serviceConnection: $(serviceConnection-prd)
+          dependsOn:
+            - deploy_az_ae_fa_formshub_dotnet_func_apps
+      - template: '../pipelines/storageAccount/apps-pipeline-formhub-feedata-storageaccount-deploy.yaml'
+        parameters:
+          environment: 'prd'
+          serviceConnection: $(serviceConnection-prd)
+          storageAccountName: azaestformshubprd
+          condition: and(succeeded(), eq(variables['runFeeSeeding'], 'true'))
+          dependsOn:
+            - deploy_formhub_logicapp

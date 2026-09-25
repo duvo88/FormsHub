@@ -1,0 +1,126 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - ls-formshub/infra/**
+
+variables:
+  - group: Integration-ServiceConnections
+
+stages:
+  # ==================== DEV Environment ====================
+  - stage: DeployInfraDEV
+    displayName: Deploy Infra (DEV)
+    condition: and(succeeded(),eq(variables['Build.Reason'], 'Manual'))
+    variables:
+      - group: Integration-dev
+    jobs:
+      - deployment: DeployInfraDev
+        displayName: Deploy Infrastructure to DEV
+        pool:
+          vmImage: ubuntu-latest
+        environment: DEV
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  clean: true
+
+                - template: infra-deploy-steps.yaml
+                  parameters:
+                    environment: dev
+                    appName: $(appName)
+                    serviceConnection: $(serviceConnection-dev)
+                    sqlAdminGroupID: $(sqlAdminGroupID)
+                    sqlAdminGroupName: $(sqlAdminGroupName)
+                    AzureSQLadminPassword: $(AzureSQLadminPassword)
+  # ==================== SIT Environment ====================
+  - stage: DeployInfraSIT
+    displayName: Deploy Infra (SIT)
+    dependsOn: []
+    condition: and(succeeded(),eq(variables['Build.Reason'], 'Manual'))
+    variables:
+      - group: Integration-sit
+    jobs:
+      - deployment: DeployInfraSit
+        displayName: Deploy Infrastructure to SIT
+        pool:
+          vmImage: ubuntu-latest
+        environment: SIT
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  clean: true
+
+                - template: infra-deploy-steps.yaml
+                  parameters:
+                    environment: sit
+                    appName: $(appName)
+                    serviceConnection: $(serviceConnection-sit)
+                    sqlAdminGroupID: $(sqlAdminGroupID)
+                    sqlAdminGroupName: $(sqlAdminGroupName)
+                    AzureSQLadminPassword: $(AzureSQLadminPassword)
+                    
+
+  # ==================== UAT Environment ====================
+  - stage: DeployInfraUAT
+    displayName: Deploy Infra (UAT)
+    dependsOn: []
+    condition: and(succeeded(),eq(variables['Build.Reason'], 'Manual'))
+    variables:
+      - group: Integration-uat
+    jobs:
+      - deployment: DeployInfraUat
+        displayName: Deploy Infrastructure to UAT
+        pool:
+          vmImage: ubuntu-latest
+        environment: UAT
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  clean: true
+
+                - template: infra-deploy-steps.yaml
+                  parameters:
+                    environment: uat
+                    appName: $(appName)
+                    serviceConnection: $(serviceConnection-uat)
+                    sqlAdminGroupID: $(sqlAdminGroupID)
+                    sqlAdminGroupName: $(sqlAdminGroupName)
+                    AzureSQLadminPassword: $(AzureSQLadminPassword)
+
+  # ==================== PRD Environment ====================
+  - stage: DeployInfraPRD
+    displayName: Deploy Infra (PRD)
+    dependsOn: []
+    condition: and(succeeded(),eq(variables['Build.Reason'], 'Manual'))
+    variables:
+      - group: Integration-prd
+    jobs:
+      - deployment: DeployInfraPrd
+        displayName: Deploy Infrastructure to PRD
+        pool:
+          vmImage: ubuntu-latest
+        environment: PRD
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  clean: true
+
+                - template: infra-deploy-steps.yaml
+                  parameters:
+                    environment: prd
+                    appName: $(appName)
+                    serviceConnection: $(serviceConnection-prd)
+                    sqlAdminGroupID: $(sqlAdminGroupID)
+                    sqlAdminGroupName: $(sqlAdminGroupName)
+                    AzureSQLadminPassword: $(AzureSQLadminPassword)

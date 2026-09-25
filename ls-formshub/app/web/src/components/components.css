@@ -1,0 +1,509 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap');
+
+/* Material Icons - Outlined style */
+.material-icons-outlined {
+  font-family: 'Material Icons Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  vertical-align: middle;
+  -webkit-font-smoothing: antialiased;
+}
+
+*, *::before, *::after {
+  font-family: Arial, sans-serif !important;
+}
+
+.material-icons-outlined, .material-icons-outlined::before, .material-icons-outlined::after {
+  font-family: 'Material Icons Outlined' !important;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #212529;
+}
+
+/* Headings */
+h1 {
+  font-family: Arial, sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 48px;
+  text-transform: none;
+  color: #F26522;
+}
+h2 {
+  font-family: Arial, sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 32px;
+}
+h3 {
+  font-family: Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 24px;
+}
+h4 {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 20px;
+}
+h5 {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 16px;
+}
+
+/* Small text */
+.small {
+  font-size: 14px;
+  line-height: 22px;
+}
+
+/* Links/anchors – orange per style guide */
+a {
+  color: #F26522;
+  text-decoration: underline;
+  transition: color 0.15s, text-decoration 0.15s;
+}
+a:hover {
+  color: #F26522;
+  text-decoration: underline;
+}
+a:active {
+  color: #F26522;
+  text-decoration: underline;
+}
+a:focus {
+  outline: 2px solid #F26522;
+  outline-offset: 2px;
+}
+
+.site-header {
+  color: #212529;
+  padding: 0;
+  background: transparent;
+}
+.header-inner { 
+  max-width: 1000px; 
+  margin: 0 auto; 
+  display:flex; 
+  align-items:flex-start; 
+  justify-content:space-between;
+  gap: 20px;
+}
+.header-top{align-items:flex-start}
+.title-block{flex:1}
+/*
+ * WCAG 2.1 AA Colour-Contrast Chart (LSNSW Digital Style Guide)
+ * ---------------------------------------------------------------
+ * FG \ BG           | Orange    | Slate     | Sandstone | White
+ * ------------------|-----------|-----------|-----------|----------
+ * Orange  (#F26522) |     —     | LARGE*    | FAIL      | LARGE
+ * Slate   (#394F5A) | FAIL      |     —     | GREAT     | GREAT
+ * Sandstone(#D8CFBC)| FAIL      | GREAT     |     —     | FAIL
+ * White   (#FFFFFF) | LARGE    | GREAT     | FAIL      |     —
+ * Dark grey(#212529)| GREAT     | FAIL      | GREAT     | GREAT
+ *
+ * LARGE* = ≥ 24 px regular  OR  ≥ 19 px bold only.  Use sparingly.
+ *
+ * Cobalt  (#1968AB) on White → 5.8 : 1  — GREAT (focus outlines)
+ * Error   (#C0392B) on White → 5.4 : 1  — GREAT (use for required asterisks)
+ *
+ * NOTE: Orange text on Slate fails accessibility guidelines.
+ *       An exception has been made ONLY for large (≥ 24 px) orange
+ *       text on Slate, and must be used sparingly — e.g. page titles.
+ *       This is the ONLY permitted use of the LARGE* exception.
+ * Do NOT use tints of brand orange (e.g. #f16411).
+ */
+.page-title{
+  color:#F26522;
+  font-size:32px;
+  line-height:32px;
+  margin:0 0 6px 0;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.4px;
+  white-space:pre-line;
+  font-family:Arial,sans-serif;
+}
+.page-sub{color:#212529;margin:0;font-size:16px;font-weight:400;line-height:24px;font-family:Arial,sans-serif}
+.page-subtitle{color:#212529;margin:0;font-size:16px;font-weight:700;text-transform:none;line-height:24px;letter-spacing:0.3px;padding:0 4px;font-family:Arial,sans-serif}
+/* Logo sizing: min 231px wide (horizontal), max 50% of header height */
+.logo-block{width:200px;display:flex;align-items:flex-start;justify-content:flex-end;flex-shrink:0}
+.logo-block img{min-width:231px;max-height:50%}
+.crest{display:flex;flex-direction:column;align-items:center;text-align:center;color:#394F5A;gap:6px}
+.crest-shield{
+  width:88px;
+  height:88px;
+  border-radius:4px;
+  background:#fff;
+  border:3px solid #F26522;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+}
+.crest-text{font-size:10px;color:#394F5A;font-weight:700;line-height:1.3}
+
+.header-rule{margin-top:12px;align-items:center;padding-bottom:14px}
+.rule-left{height:4px;background:#F26522;flex:1;margin-right:6px}
+.rule-right{height:1px;background:#F26522;flex:0.5}
+
+
+.site-footer{background:#ffffff;padding:24px 32px;border-top:1px solid #E1E4E5}
+.footer-inner{max-width:1000px;margin:0 auto;text-align:center;color:#212529;font-size:12px}
+
+.form-container{display:flex;justify-content:center;padding:24px 32px}
+.form-card{max-width:1000px;width:100%;background:#fff;border-radius:4px;padding:24px 32px;box-shadow:0 2px 8px rgba(33,37,41,0.04);border:1px solid #E1E4E5}
+.section-title{font-size:20px;margin:16px 0 10px;color:#F26522;font-weight:700;line-height:20px;letter-spacing:0.3px;font-family:Arial,sans-serif}
+.section-heading{font-size:20px;margin:16px 0 10px;color:#212529;font-weight:700;line-height:20px;text-transform:uppercase;letter-spacing:0.3px;font-family:Arial,sans-serif;padding-bottom:10px;border-bottom:1px solid #E1E4E5}
+.section-container{padding:0 15px}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px}
+.grid-12{display:grid;grid-template-columns:repeat(12,1fr);grid-gap:32px}
+.form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px}
+.form-field{display:flex;flex-direction:column;margin-bottom:0}
+
+/* Table – simple table per style guide */
+.table-row{padding:15px;text-align:left}
+.table-header{font-weight:700;border-bottom:1px solid #212529}
+.table-header th,.table-header td{text-align:left;padding:15px}
+.table-numerical{text-align:right}
+.table-odd{background:#F4F3EF}
+.form-label{font-size:16px;color:#212529;margin-bottom:6px;font-weight:700;line-height:24px;font-family:Arial,sans-serif}
+.error-message{color:#C0392B;font-size:12px;margin-top:-5px;font-family:Arial,sans-serif;font-weight:600;line-height:1.35;letter-spacing:normal;display:block}
+.error-message.option-group{margin-top:8px}
+/* Add extra spacing when an error follows a radio/checkbox options container. */
+div:has(> label > input[type="radio"]) + .error-message,
+div:has(> label > input[type="checkbox"]) + .error-message {
+  margin-top: 8px;
+}
+/* File upload errors need more breathing room below the dropzone. */
+.file-upload-field .error-message { margin-top: 10px; }
+.form-input, .input, .select{font-family:Arial, sans-serif;padding:15px;border:1px solid #9EA5AB;border-radius:4px;font-size:16px;line-height:24px;height:56px;background:#fff;color:#212529;width:100%;box-sizing:border-box;margin-bottom:15px}
+.btn-browse{padding:0 20px;font-size:16px;font-weight:600;color:#fff;background-color:#F26522;border:1px solid #F26522;height:56px;box-sizing:border-box;border-top-left-radius:0;border-bottom-left-radius:0;border-top-right-radius:4px;border-bottom-right-radius:4px;cursor:pointer;display:flex;align-items:center;white-space:nowrap;margin-bottom:0}
+.form-textarea, .textarea{font-family:Arial, sans-serif;padding:15px;border:1px solid #9EA5AB;border-radius:4px;font-size:16px;line-height:24px;min-height:120px;background:#fff;color:#212529;width:100%;box-sizing:border-box;margin-bottom:15px;resize:vertical}
+.textarea .form-textarea{min-height:120px}
+.form-input::placeholder, .input::placeholder, .form-textarea::placeholder, .textarea::placeholder{color:#9EA5AB}
+.form-input.error, .input.error, .select.error, .textarea.error{border-color:#C0392B}
+.helperText, .input.helperText{font-size:14px;color:#394F5A;margin-bottom:4px}
+
+/* Input hover state */
+.form-input:hover, .input:hover, .select:hover, .form-textarea:hover, .textarea:hover{border-color:#394F5A}
+
+label{font-weight:700;font-size:16px;margin-bottom:6px}
+
+/* Custom radio button — consistent 25px circle across browsers */
+input[type="radio"], .radio{
+  -webkit-appearance:none;-moz-appearance:none;appearance:none;
+  width:25px !important;height:25px !important;min-width:25px;min-height:25px;
+  margin-right:15px;cursor:pointer;
+  border:2px solid #9EA5AB;border-radius:50%;
+  background:#fff;position:relative;
+  display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+input[type="radio"]:hover{border-color:#394F5A}
+input[type="radio"]:checked{border-color:#394F5A}
+input[type="radio"]:checked::after{
+  content:'';display:block;
+  width:13px;height:13px;border-radius:50%;
+  background:#394F5A;
+}
+input[type="radio"]:focus,input[type="radio"]:focus-visible{outline:none !important;border-color:#F26522;border-width:2px}
+input[type="radio"]:checked:focus,input[type="radio"]:checked:focus-visible{border-color:#394F5A}
+
+/* Custom checkbox — consistent 25px square across browsers */
+input[type="checkbox"], .checkbox{
+  -webkit-appearance:none;-moz-appearance:none;appearance:none;
+  width:25px !important;height:25px !important;min-width:25px;min-height:25px;
+  margin-right:15px;cursor:pointer;
+  border:2px solid #9EA5AB;border-radius:3px;
+  background:#fff;position:relative;
+  display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+input[type="checkbox"]:hover{border-color:#394F5A}
+input[type="checkbox"]:checked{border-color:#394F5A;background:#394F5A}
+input[type="checkbox"]:checked::after{
+  content:'';display:block;
+  width:7px;height:13px;
+  border:solid #fff;border-width:0 2.5px 2.5px 0;
+  transform:rotate(45deg);
+  margin-top:-2px;
+}
+input[type="checkbox"]:focus,input[type="checkbox"]:focus-visible{outline:none !important;border-color:#F26522;border-width:2px}
+input[type="checkbox"]:checked:focus,input[type="checkbox"]:checked:focus-visible{border-color:#394F5A}
+
+/* Focus state — orange border */
+.form-card input:not([type="radio"]):not([type="checkbox"]):focus,
+.form-card textarea:focus,
+.form-card select:focus,
+.input:focus, .select:focus, .textarea:focus {
+  border:2px solid #F26522;
+  outline: none;
+  box-shadow: none;
+}
+/* Error field focus — red border overrides orange */
+.form-card input.error:not([type="radio"]):not([type="checkbox"]):focus,
+.form-card textarea.error:focus,
+.form-card select.error:focus,
+.input.error:focus, .select.error:focus, .textarea.error:focus {
+  border:2px solid #C0392B;
+  outline: none;
+  box-shadow: none;
+}
+/* Ensure readonly file-display fields still show orange focus border */
+.form-card input[readOnly].form-input:focus {
+  border:2px solid #F26522 !important;
+  outline: none;
+  box-shadow: none;
+  cursor: default;
+}
+/* Active/clicked state (mousedown moment) — dark slate bg with white text */
+.form-card input:not([type="radio"]):not([type="checkbox"]):not([readOnly]):active,
+.form-card textarea:active,
+.form-card select:active,
+.input:active, .select:active, .textarea:active {
+  background:#394F5A;
+  color:#fff;
+  border:1px solid #394F5A;
+  outline: none;
+}
+
+/* Date picker styles */
+.date-picker-wrapper,.react-datepicker-wrapper{width:100%}
+.date-picker-wrapper input.form-input{width:100%;box-sizing:border-box}
+input[type="date"]:not(:focus):not(:valid) {
+  color: transparent;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+.dob-field .dob-inputs{display:flex;align-items:center;gap:4px}
+.dob-box{width:32px;height:22px;padding:3px 6px;border-radius:2px;border:1px solid #9EA5AB;background:#F4F3EF;text-align:center;font-size:12px;color:#212529}
+.dob-box.year{width:60px}
+.dob-sep{color:#212529;font-size:12px}
+
+.actions{display:flex;gap:10px;justify-content:flex-start;margin-top:16px}
+
+/* Buttons – font is Arial only per style guide */
+.btn, .button {
+  font-family: Arial, sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 19px;
+  padding: 15px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  color: #212529;
+  background: #fff;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+/* Primary */
+.btn.primary, .button.primary {
+  background: #F26522;
+  color: #FFFFFF;
+}
+.btn.primary:hover, .button.primary:hover {
+  background: #394F5A;
+  border-color: #F26522;
+}
+.btn.primary:active, .button.primary:active {
+  background: #394F5A;
+  border-color: transparent;
+}
+.btn.primary:focus, .button.primary:focus {
+  outline: none;
+  border-color: #F26522;
+  box-shadow: 0 0 0 2px #F26522;
+}
+.btn.primary:disabled, .button.primary:disabled {
+  background: #f4a77a;
+  border-color: transparent;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* Secondary */
+.button.secondary {
+  background: #394F5A;
+  color: #FFFFFF;
+}
+.button.secondary:hover {
+  background: #FFFFFF;
+  color: #F26522;
+  border-color: #F26522;
+}
+.button.secondary:active {
+  background: #394F5A;
+  color: #FFFFFF;
+  border-color: transparent;
+}
+.button.secondary:focus {
+  outline: none;
+  border-color: #F26522;
+  box-shadow: 0 0 0 2px #F26522;
+}
+.button.secondary:disabled {
+  background: #9EA5AB;
+  border-color: transparent;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* Tertiary */
+.button.tertiary {
+  background: transparent;
+  color: #394F5A;
+  border: 2px solid #394F5A;
+}
+.button.tertiary:hover {
+  color: #F26522;
+  border-color: #F26522;
+}
+.button.tertiary:active {
+  color: #394F5A;
+  border-color: #394F5A;
+}
+.button.tertiary:focus {
+  outline: none;
+  border-color: #F26522;
+  box-shadow: 0 0 0 2px #F26522;
+}
+.button.tertiary:disabled {
+  color: #9EA5AB;
+  border-color: #9EA5AB;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* Generic disabled & focus fallback */
+.btn:disabled, .button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.btn:focus, .button:focus {
+  outline: 2px solid #F26522;
+}
+.btn.small, .button.small {
+  font-size: 14px;
+  padding: 5px 15px;
+}
+
+@media (max-width:900px){
+  .grid-12{grid-template-columns:repeat(6,1fr)}
+}
+@media (max-width:720px){
+  .logo-block{display:none}
+  .page-title{font-size:22px}
+  .header-inner{flex-direction:column}
+}
+@media (max-width:600px){
+  .grid,.form-row{grid-template-columns:1fr}
+  .grid-12{grid-template-columns:repeat(3,1fr)}
+}
+
+/* ── Section divider ──────────────────────────────────────────────────── */
+.section-divider{height:2px;border:none;border-top:3px solid #F26522;margin:9px 0}
+
+/* ── Submit error banner ──────────────────────────────────────────────── */
+.submit-error-banner{color:#C0392B;margin-bottom:20px;padding:12px 16px;background-color:#fee2e2;border-radius:4px;border:1px solid #C0392B;font-size:14px}
+
+/* ── Processing banner ────────────────────────────────────────────────── */
+.submit-processing-banner{color:#0b1220;margin-bottom:20px;padding:12px 16px;background-color:#e0f2fe;border-radius:4px;border:1px solid #0ea5e9;font-size:14px}
+
+.floating-section-progress {
+  position: fixed;
+  right: 12px;
+  bottom: 104px;
+  z-index: 20;
+  font-size: 11px;
+  line-height: 1;
+  color: #5f6c75;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #d7dde2;
+  border-radius: 10px;
+  padding: 5px 9px;
+  user-select: none;
+}
+
+.floating-scroll-nav {
+  position: fixed;
+  right: 16px;
+  bottom: 20px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.floating-scroll-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #cfd6dc;
+  background: rgba(255, 255, 255, 0.82);
+  color: #51616d;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  opacity: 0.62;
+  transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .floating-scroll-btn:hover {
+    border-color: #7f93a1;
+    background: rgba(255, 255, 255, 0.98);
+    color: #2f4553;
+    box-shadow: 0 2px 8px rgba(47, 69, 83, 0.2);
+    opacity: 1;
+  }
+}
+
+.floating-scroll-btn:focus-visible {
+  outline: 2px solid #f26522;
+  outline-offset: 1px;
+}
+
+@media (max-width: 768px) {
+  .floating-section-progress {
+    right: 8px;
+    bottom: 92px;
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .floating-scroll-nav {
+    right: 10px;
+    bottom: 14px;
+  }
+
+  .floating-scroll-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
+  }
+}

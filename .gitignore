@@ -1,0 +1,36 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+# IDE folders
+.vs/
+.vscode/
+
+# Reference folder — not part of the repo
+formshub_bicep/
+
+# Old paths (kept for reference, can be removed)
+# /apps/.vs
+# /apps/.vscode
+# /apps/az-ae-fa-formshub-functionapp/.vscode
+# /apps/az-ae-fa-formshub-functionapp/appsettings.json
+
+# App settings
+appsettings.json
+local.settings.json
+swa-cli.config.json
+
+# PDF reference files
+ls-formshub/formspdf/
+
+# Restructure/reference export files
+_path_refs_before.csv
+*_path_refs_*.csv
+
+# .NET build outputs
+**/bin/
+**/obj/
+**/TestResults/
+
+ls-formshub/src/FeeLogic.Tests/bin/
+ls-formshub/src/FeeLogic.Tests/obj/

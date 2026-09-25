@@ -1,0 +1,68 @@
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# VS Code workspace settings
+.vscode/
+.history/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+apps/web/node_modules/
+
+# Build output
+apps/web/build/
+apps/web/dist/
+
+# Testing / coverage output
+apps/web/coverage/
+
+# Optional analyzer output
+apps/web/analyze/
+
+# .NET build artifacts
+apps/az-ae-fa-formshub-functionapp/bin/
+apps/az-ae-fa-formshub-functionapp/obj/
+
+# Local Function settings (contains secrets)
+apps/api/local.settings.json
+
+# Terraform state and cache
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/*.tfplan
+infra/*.terraform.lock.hcl
+infra/.terraform.tfstate.backup
+
+# Bicep build
+infra/*.json
+
+# node
+/node_modules
+/.pnp
+.pnp.js
+
+
+# testing
+/coverage
+
+# build
+/build
+
+# MISC
+*.tmp
+*.bak
+*.swp

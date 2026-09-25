@@ -1,0 +1,15 @@
+:root{
+  --max-width:980px;
+  --page-bg:#FFFFFF;
+  --muted:#9EA5AB;
+}
+html,body,#root{height:100%}
+body{margin:0;font-family:Arial, sans-serif; background:var(--page-bg);color:#212529}
+.page-root{min-height:100%;display:flex;flex-direction:column}
+
+/* small helpers */
+.section-title{letter-spacing:0.1px}
+
+/* radio option layout */
+.radio-option{display:flex;align-items:center;gap:10px;cursor:pointer}
+

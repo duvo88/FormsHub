@@ -1,0 +1,26 @@
+{
+    "version": "2.0",
+    "logging": {
+        "logLevel": {
+            "default": "Information",
+            "Host": "Warning",
+            "Function": "Information",
+            "Host.Aggregator": "Information"
+        },
+        "applicationInsights": {
+            "samplingSettings": {
+                "isEnabled": false
+            },
+            "enableLiveMetricsFilters": true
+        }
+    },
+    "extensions": {
+        "http": {
+            "routePrefix": "api"
+        }
+    },
+    "cors": {
+        "allowedOrigins": ["http://localhost:3000"],
+        "supportCredentials": false
+    }
+}

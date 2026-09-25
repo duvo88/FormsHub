@@ -1,0 +1,173 @@
+parameters:
+  - name: environment
+    type: string
+  - name: appName
+    type: string
+  - name: serviceConnection
+    type: string
+  - name: sqlAdminGroupID
+    type: string
+  - name: sqlAdminGroupName
+    type: string
+  - name: AzureSQLadminPassword
+    type: string
+
+steps:
+  - task: AzureCLI@2
+    displayName: Fetch ACS key from Key Vault
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "🔑 Fetching ACS connection string from Key Vault: $(keyVaultName)"
+        acsKey=$(az keyvault secret show \
+          --vault-name $(keyVaultName) \
+          --name ACS-CONNECTION-STRING \
+          --query value -o tsv)
+        
+        # Debug: Check if secret was retrieved (without printing the value)
+        if [ -z "$acsKey" ]; then
+          echo "❌ ERROR: ACS connection string is empty or not found!"
+          exit 1
+        else
+          echo "✅ ACS connection string retrieved (length: ${#acsKey} characters)"
+        fi
+        
+        echo "##vso[task.setvariable variable=acsApiKey;issecret=true]$acsKey"
+
+  - task: AzureCLI@2
+    displayName: Validate Bicep — ${{ parameters.environment }}
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "======================================"
+        echo "🔍 BICEP WHAT-IF VALIDATION"
+        echo "Environment: ${{ parameters.environment }}"
+        echo "Resource Group: $(resourceGroupName)"
+        echo "======================================"
+        echo ""
+        echo "📋 This will show what changes will be made WITHOUT actually deploying:"
+        echo "  ✅ Resources to be CREATED (green)"
+        echo "  🔄 Resources to be MODIFIED (yellow/blue)"
+        echo "  ❌ Resources to be DELETED (red)"
+        echo "  ⚪ Resources with NO CHANGE (white)"
+        echo ""
+        
+        az deployment group what-if \
+          --subscription $(subscriptionId) \
+          --resource-group $(resourceGroupName) \
+          --template-file ls-formshub/infra/main.bicep \
+          --parameters environment=${{ parameters.environment }} location=$(location) appName=${{ parameters.appName }} acsApiKey="$(acsApiKey)" sqlAdminGroupID=${{ parameters.sqlAdminGroupID }} sqlAdminGroupName=${{ parameters.sqlAdminGroupName }} AzureSQLadminPassword=${{ parameters.AzureSQLadminPassword }} \
+          --name infra-${{ parameters.environment }}-$(Build.BuildId)
+        
+        echo ""
+        echo "======================================"
+        echo "✅ What-if validation completed"
+        echo "======================================"
+
+  - task: AzureCLI@2
+    displayName: Deploy Bicep — ${{ parameters.environment }}
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "======================================"
+        echo "🚀 BICEP DEPLOYMENT STARTING"
+        echo "Environment: ${{ parameters.environment }}"
+        echo "Resource Group: $(resourceGroupName)"
+        echo "Location: $(location)"
+        echo "======================================"
+        echo ""
+        
+        # Set verbose output
+        export AZURE_HTTP_USER_AGENT="FormsHub-Pipeline"
+        
+        echo "📦 Deploying infrastructure components:"
+        echo "  ☁️  Monitoring & Application Insights"
+        echo "  💾 Storage Accounts"
+        echo "  🚌 Service Bus Namespace & Queues"
+        echo "  🌐 Static Web App"
+        echo "  ⚡ Function App & App Service Plan"
+        echo "  🔐 Key Vault (if needed)"
+        echo "  🔗 API Connections for Logic App"
+        echo "  🔄 Logic App Workflow"
+        echo "  👤 Managed Identity Role Assignments"
+        echo ""
+        
+        echo "⏳ Deployment in progress... (this may take 5-10 minutes)"
+        echo ""
+        
+        az deployment group create \
+          --subscription $(subscriptionId) \
+          --resource-group $(resourceGroupName) \
+          --template-file ls-formshub/infra/main.bicep \
+          --parameters environment=${{ parameters.environment }} location=$(location) appName=${{ parameters.appName }} acsApiKey="$(acsApiKey)" sqlAdminGroupID=${{ parameters.sqlAdminGroupID }} sqlAdminGroupName=${{ parameters.sqlAdminGroupName }} AzureSQLadminPassword=${{ parameters.AzureSQLadminPassword }} \
+          --name infra-${{ parameters.environment }}-$(Build.BuildId) \
+          --verbose | while IFS= read -r line; do
+            # Highlight key deployment events
+            if echo "$line" | grep -qi "creating\|deploying"; then
+              echo "📝 $line"
+            elif echo "$line" | grep -qi "succeeded"; then
+              echo "✅ $line"
+            elif echo "$line" | grep -qi "failed\|error"; then
+              echo "❌ $line"
+            elif echo "$line" | grep -qi "updating\|modifying"; then
+              echo "🔄 $line"
+            else
+              echo "$line"
+            fi
+          done
+        
+        # Capture deployment result
+        DEPLOY_RESULT=$?
+        
+        echo ""
+        if [ $DEPLOY_RESULT -eq 0 ]; then
+          echo "======================================"
+          echo "✅ DEPLOYMENT COMPLETED SUCCESSFULLY"
+          echo "Environment: ${{ parameters.environment }}"
+          echo "======================================"
+          echo ""
+          echo "📊 Deployment Outputs:"
+          az deployment group show \
+            --resource-group $(resourceGroupName) \
+            --name infra-${{ parameters.environment }}-$(Build.BuildId) \
+            --query 'properties.outputs' -o json
+        else
+          echo "======================================"
+          echo "❌ DEPLOYMENT FAILED"
+          echo "======================================"
+          exit $DEPLOY_RESULT
+        fi
+
+  - task: AzureCLI@2
+    displayName: Link Function App to Static Web App
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "🔗 Linking Function App to Static Web App..."
+        
+        functionAppName="az-ae-func-${{ parameters.appName }}-${{ parameters.environment }}"
+        staticWebAppName="az-ae-stapp-${{ parameters.appName }}-${{ parameters.environment }}"
+
+        echo "Function App: $functionAppName"
+        echo "Static Web App: $staticWebAppName"
+
+        functionAppId=$(az functionapp show \
+          --name "$functionAppName" \
+          --resource-group "$(resourceGroupName)" \
+          --query id -o tsv)
+
+        az staticwebapp backends link \
+          --name "$staticWebAppName" \
+          --resource-group "$(resourceGroupName)" \
+          --backend-resource-id "$functionAppId" \
+          --backend-region "$(location)"
+        
+        echo "✅ Function App linked successfully"

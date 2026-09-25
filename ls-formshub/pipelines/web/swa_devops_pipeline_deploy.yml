@@ -1,0 +1,28 @@
+parameters:
+  - name: environment
+    type: string
+  - name: serviceConnection
+    type: string
+
+jobs:
+  - deployment:  deploy_az_ae_fa_formshub_dotnet_static_web_apps
+    displayName: 'deploy formshub static web apps'
+    environment: ${{ parameters.environment }}
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-latest
+      demands:
+        - msbuild
+        - visualstudio
+        - vstest
+    strategy:
+      runOnce:
+        deploy:
+          steps:         
+          - template: 'swa_devops_pipeline_${{ parameters.environment }}.yml'          
+            parameters:
+              serviceConnection: ${{ parameters.serviceConnection }}                          
+          
+            
+
+                

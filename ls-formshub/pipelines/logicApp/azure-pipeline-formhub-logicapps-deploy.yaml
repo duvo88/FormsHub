@@ -1,0 +1,73 @@
+﻿parameters:
+  - name: environment
+    type: string
+  - name: serviceConnection
+    type: string
+  - name: dependsOn
+    type: object
+    default: []
+
+jobs:
+  - deployment: deploy_formhub_logicapp
+    displayName: "deploy form hub logicapps"
+    dependsOn: ${{ parameters.dependsOn }}
+    environment: ${{ parameters.environment }}
+    pool:
+      vmImage: ubuntu-latest
+    strategy:
+      runOnce: 
+        deploy:
+          steps:
+            - checkout: self
+              clean: true
+
+            # Replace variable tokens in parameter file
+            - task: PowerShell@2
+              displayName: 'Replace tokens in Logic App parameters'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  $paramFile = "ls-formshub/app/logicApp/integration-formhub-${{ parameters.environment }}.parameters.json"
+                  $content = Get-Content $paramFile -Raw
+                  
+                  # Replace tokens with actual values from variable group
+                  $content = $content -replace '__SUBSCRIPTION_ID__', '$(subscriptionId)'
+                  $content = $content -replace '__RESOURCE_GROUP__', '$(resourceGroupName)'
+                  $content = $content -replace '__STORAGE_ACCOUNT_NAME__', '$(storageAccountName)'
+                  
+                  Set-Content -Path $paramFile -Value $content
+                  Write-Host "✅ Tokens replaced: subscriptionId=$(subscriptionId), resourceGroupName=$(resourceGroupName), storageAccountName=$(storageAccountName)"
+                pwsh: false
+
+            # Validation Tests (run BEFORE deployment)
+            - task: PowerShell@2
+              displayName: 'Validate Logic App Definition'
+              inputs:
+                filePath: 'ls-formshub/app/logicApp/Test-LogicAppDefinition.ps1'
+                arguments: '-Environment ${{ parameters.environment }}'
+                errorActionPreference: 'stop'
+                failOnStderr: true
+                pwsh: false
+
+            - task: AzureResourceGroupDeployment@2
+              displayName: "Validation - Form Hub LogicApp"
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                resourceGroupName: "$(resourceGroupName)"
+                location: "$(location)"
+                csmFile: "ls-formshub/app/logicApp/integration-formhub.definition.json"
+                csmParametersFile: "ls-formshub/app/logicApp/integration-formhub-${{ parameters.environment }}.parameters.json"
+                deploymentMode: "Validate"
+                # Enable variable substitution in parameter file
+                enableDeploymentPrerequisites: "None"
+
+            - task: AzureResourceGroupDeployment@2
+              displayName: "Deploy - form hub LogicApp"
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                resourceGroupName: "$(resourceGroupName)"
+                location: "$(location)"
+                csmFile: "ls-formshub/app/logicApp/integration-formhub.definition.json"
+                csmParametersFile: "ls-formshub/app/logicApp/integration-formhub-${{ parameters.environment }}.parameters.json"
+                deploymentMode: "Incremental"
+

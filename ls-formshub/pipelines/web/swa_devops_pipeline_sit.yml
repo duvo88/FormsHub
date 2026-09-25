@@ -1,0 +1,107 @@
+﻿parameters:
+  - name: serviceConnection
+    type: string
+
+steps:
+- checkout: self
+
+# Fetch wellKnownOpenIdConfiguration from Key Vault
+- task: AzureCLI@2
+  displayName: 'Fetch AADB2C OpenID Configuration from Key Vault'
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptType: pscore
+    scriptLocation: inlineScript
+    inlineScript: |
+      $wellKnownConfig = az keyvault secret show `
+        --vault-name $(keyVaultName) `
+        --name AADB2C-OPENID-CONFIG-URL `
+        --query value -o tsv
+      if ([string]::IsNullOrWhiteSpace($wellKnownConfig)) { throw "Could not retrieve AADB2C-OPENID-CONFIG-URL from Key Vault." }
+      Write-Host "##vso[task.setvariable variable=WELL_KNOWN_OPENID_CONFIGURATION]$wellKnownConfig"
+
+# Replace wellKnownOpenIdConfiguration placeholder with value from Key Vault
+- script: |
+    sed -i 's|__WELL_KNOWN_OPENID_CONFIGURATION__|$(WELL_KNOWN_OPENID_CONFIGURATION)|g' ls-formshub/app/web/public/staticwebapp.config.json
+  displayName: 'Replace wellKnownOpenIdConfiguration token'
+  
+# Install and build React
+- task: UseNode@1
+  inputs:
+    version: '20.x'
+  displayName: 'Use Node.js 20'
+
+- script: |
+    ls -la
+    cd ls-formshub/app/web
+    npm install
+  displayName: 'Install dependencies'
+
+# Run unit tests BEFORE build
+- script: |
+    cd ls-formshub/app/web
+    npm test -- --watchAll=false --coverage --ci --reporters=default --reporters=jest-junit
+  displayName: 'Run React Unit Tests'
+  env:
+    JEST_JUNIT_OUTPUT_DIR: coverage
+    JEST_JUNIT_OUTPUT_NAME: junit.xml
+
+- task: PublishTestResults@2
+  displayName: 'Publish Test Results'
+  condition: always()
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: 'ls-formshub/app/web/coverage/junit.xml'
+    testRunTitle: 'React Unit Tests - SIT'
+
+# Note: Code coverage for React is generated but not published to Azure DevOps
+# (react-scripts outputs lcov format which requires conversion to Cobertura)
+# Tests still run and will fail the pipeline if they don't pass
+
+- script: |
+    cd ls-formshub/app/web
+    npm run build
+  env:
+    REACT_APP_PC_NEW_INTERSTATE_EXIT_URL: https://az-ae-app-b2capp-qa.azurewebsites.net/Home/Home
+  displayName: 'Build Law Society Forms Web App'
+
+# Fetch SWA deployment token at runtime â€” no variable group needed
+- task: AzureCLI@2
+  displayName: 'Fetch Static Web App deployment token'
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptType: pscore
+    scriptLocation: inlineScript
+    inlineScript: |
+      $token = az staticwebapp secrets list `
+        --name $(staticWebAppName) `
+        --resource-group "$(resourceGroupName)" `
+        --query "properties.apiKey" -o tsv
+      if ([string]::IsNullOrWhiteSpace($token)) { throw "Could not retrieve SWA deployment token." }
+      Write-Host "##vso[task.setvariable variable=swa_token;isSecret=true]$token"
+
+# Deploy built files to Static Web App
+- task: AzureStaticWebApp@0
+  displayName: 'Deploy to Azure Static Web App $(staticWebAppName)'
+  inputs:
+    app_location: 'ls-formshub/app/web'
+    api_location: ''
+    output_location: 'build'
+    azure_static_web_apps_api_token: $(swa_token)
+
+# Configure Static Web App settings with Key Vault references
+- task: AzureCLI@2
+  displayName: 'Configure Static Web App settings'
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az staticwebapp appsettings set `
+        --name $(staticWebAppName) `
+        --resource-group $(resourceGroupName) `
+        --setting-names `
+          AADB2C_PROVIDER_CLIENT_ID='@Microsoft.KeyVault(SecretUri=https://$(keyVaultName).vault.azure.net/secrets/AADB2C-PROVIDER-CLIENT-ID/)' `
+          AADB2C_PROVIDER_CLIENT_SECRET='@Microsoft.KeyVault(SecretUri=https://$(keyVaultName).vault.azure.net/secrets/AADB2C-PROVIDER-CLIENT-SECRET/)' `
+          AADB2C_OPENID_CONFIG_URL='@Microsoft.KeyVault(SecretUri=https://$(keyVaultName).vault.azure.net/secrets/AADB2C-OPENID-CONFIG-URL/)'
+

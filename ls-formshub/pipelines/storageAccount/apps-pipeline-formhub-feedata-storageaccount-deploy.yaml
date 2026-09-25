@@ -1,0 +1,86 @@
+﻿parameters:
+  - name: environment
+    type: string
+  - name: serviceConnection
+    type: string
+  - name: storageAccountName
+    type: string
+  - name: dependsOn
+    type: object
+    default: []
+  - name: condition
+    type: string
+    default: succeeded()
+
+jobs:
+  - deployment: deploy_formshub_feedata_storageaccount
+    displayName: 'Seed Forms Hub Fee Rules Data'
+    dependsOn: ${{ parameters.dependsOn }}
+    condition: ${{ parameters.condition }}
+    environment: ${{ parameters.environment }}
+    pool:
+      name: Azure Pipelines
+      vmImage: 'windows-2022'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: self
+              clean: true
+            - script: |
+                echo "##[warning]âš ï¸  WARNING - READ BEFORE PROCEEDING âš ï¸"
+                echo "##[warning]This pipeline seeds fee values into existing FeeRule tables."
+                echo "##[warning]Table schema and storage account are managed by infra/main.bicep."
+                echo "##[warning]If fee amounts need to change, update the seed PS1 script and run this pipeline."
+                echo "##[warning]**NOTE: Re-running WILL OVERWRITE ALL EXISTING FEE DATA.**"
+                echo "##[warning]Verify data in Azure Portal after seeding before using in production."
+              displayName: "âš ï¸ WARNING - Read Before Proceeding"
+            - task: AzurePowerShell@5
+              displayName: "Seed - FeeRulePCNew"
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                ScriptType: 'FilePath'
+                ScriptPath: 'ls-formshub/pipelines/storageAccount/seed-fee-rules-pcnew.ps1'
+                ScriptArguments: '-StorageAccountName ${{ parameters.storageAccountName }}'
+                azurePowerShellVersion: 'LatestVersion'
+            - task: AzurePowerShell@5
+              displayName: "Seed - FeeRulePCRenew"
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                ScriptType: 'FilePath'
+                ScriptPath: 'ls-formshub/pipelines/storageAccount/seed-fee-rules-pcrenew.ps1'
+                ScriptArguments: '-StorageAccountName ${{ parameters.storageAccountName }}'
+                azurePowerShellVersion: 'LatestVersion'
+            - task: AzurePowerShell@5
+              displayName: "Seed - FeeRulePCVariation"
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                ScriptType: 'FilePath'
+                ScriptPath: 'ls-formshub/pipelines/storageAccount/seed-fee-rules-pcvariation.ps1'
+                ScriptArguments: '-StorageAccountName ${{ parameters.storageAccountName }}'
+                azurePowerShellVersion: 'LatestVersion'
+            - task: AzurePowerShell@5
+              displayName: "Seed - FeeRulePCOriginal"
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                ScriptType: 'FilePath'
+                ScriptPath: 'ls-formshub/pipelines/storageAccount/seed-fee-rules-pcoriginal.ps1'
+                ScriptArguments: '-StorageAccountName ${{ parameters.storageAccountName }}'
+                azurePowerShellVersion: 'LatestVersion'
+            - task: AzurePowerShell@5
+              displayName: "Seed - FeeRuleCof"
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                ScriptType: 'FilePath'
+                ScriptPath: 'ls-formshub/pipelines/storageAccount/seed-fee-rules-cof.ps1'
+                ScriptArguments: '-StorageAccountName ${{ parameters.storageAccountName }}'
+                azurePowerShellVersion: 'LatestVersion'
+            - task: AzurePowerShell@5
+              displayName: "Seed - FeeRuleSimpleForms"
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnection }}
+                ScriptType: 'FilePath'
+                ScriptPath: 'ls-formshub/pipelines/storageAccount/seed-fee-rules-simpleforms.ps1'
+                ScriptArguments: '-StorageAccountName ${{ parameters.storageAccountName }}'
+                azurePowerShellVersion: 'LatestVersion'
+

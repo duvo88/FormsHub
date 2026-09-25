@@ -1,0 +1,75 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workflows_integration_formhub_name": {
+      "value": "az-ae-logic-formshub-uat"
+    },
+    "workflows_integration_formshub_diagnosticsettings_name": {
+      "value": "service"
+    },
+    "workflows_integration_formshub_diagnosticsettings_workspaceid": {
+      "value": "/subscriptions/__SUBSCRIPTION_ID__/resourceGroups/__RESOURCE_GROUP__/providers/Microsoft.OperationalInsights/workspaces/az-ae-log-formshub-uat"
+    },    
+    "workflows_integration_formhub_$connections": {
+      "value": {
+        "servicebus": {
+          "id": "/subscriptions/__SUBSCRIPTION_ID__/providers/Microsoft.Web/locations/australiaeast/managedApis/servicebus",
+          "connectionId": "/subscriptions/__SUBSCRIPTION_ID__/resourceGroups/__RESOURCE_GROUP__/providers/Microsoft.Web/connections/servicebus-conn-formshub-uat",
+          "connectionName": "servicebus-conn-formshub-uat",
+          "connectionProperties": {
+            "authentication": {
+              "type": "ManagedServiceIdentity"
+            }
+          }
+        },
+        "azureblob": {
+          "id": "/subscriptions/__SUBSCRIPTION_ID__/providers/Microsoft.Web/locations/australiaeast/managedApis/azureblob",
+          "connectionId": "/subscriptions/__SUBSCRIPTION_ID__/resourceGroups/__RESOURCE_GROUP__/providers/Microsoft.Web/connections/azureblob-conn-formshub-uat",
+          "connectionName": "azureblob-conn-formshub-uat",
+          "connectionProperties": {
+            "authentication": {
+              "type": "ManagedServiceIdentity"
+            }
+          }
+        },
+       "acsemail": {
+          "id": "/subscriptions/__SUBSCRIPTION_ID__/providers/Microsoft.Web/locations/australiaeast/managedApis/acsemail",
+          "connectionId": "/subscriptions/__SUBSCRIPTION_ID__/resourceGroups/__RESOURCE_GROUP__/providers/Microsoft.Web/connections/acsemail-conn-formshub-uat",
+          "connectionName": "acsemail-conn-formshub-uat",
+          "connectionProperties": {}
+        }
+      }
+    },
+    "workflows_integration_formhub_emailto_registry": {
+      "value": [
+        { "address": "registry@lawsociety.com.au" }
+      ]
+    },
+    "workflows_integration_formhub_emailto_a2j": {
+      "value": [
+        { "address": "a2j@lawsociety.com.au" }
+      ]
+    },
+    "workflows_integration_formhub_emailFrom": {
+      "value": "no-reply.forms@uat-appmail.lawsociety.com.au"
+    },
+    "workflows_integration_formhub_storageaccountname": {
+      "value": "__STORAGE_ACCOUNT_NAME__"
+    },
+    "workflows_integration_formhub_SBSubscription": {
+      "value": "form-submission-data"
+    },
+    "workflows_integration_formhub_SBTopic": {
+      "value": "forms-submission"
+    },
+    "workflows_integration_formhub_tags": {
+      "value": {
+        "Environment": "UAT",
+        "Application": "FormsHub",
+        "CreatedBy": "TL Consulting - BICEP",
+        "Owner": "Mihir Mehta"
+      }
+    }
+  }
+  }

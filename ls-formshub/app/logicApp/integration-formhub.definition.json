@@ -1,0 +1,519 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workflows_integration_formhub_name": {
+      "type": "String"
+    },
+    "workflows_integration_formhub_emailto_registry": {
+      "type": "Array"
+    },
+    "workflows_integration_formhub_emailto_a2j": {
+      "type": "Array"
+    },
+    "workflows_integration_formhub_storageaccountname": {
+      "type": "String"
+    },
+    "workflows_integration_formhub_SBSubscription": {
+      "type": "String"
+    },
+    "workflows_integration_formhub_SBTopic": {
+      "type": "String"
+    },
+    "workflows_integration_formhub_$connections": {
+      "type": "Object"
+    },
+    "workflows_integration_formshub_diagnosticsettings_name": {
+      "type": "String"
+    },
+    "workflows_integration_formshub_diagnosticsettings_workspaceid": {
+      "type": "String"
+    },
+    "workflows_integration_formhub_tags": {
+      "type": "Object"
+    },
+    "workflows_integration_formhub_emailFrom": {
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "name": "[parameters('workflows_integration_formhub_name')]",
+      "location": "australiaeast",
+      "resources": [
+        {
+          "type": "/providers/diagnosticSettings",
+          "name": "[concat('Microsoft.Insights/', parameters('workflows_integration_formshub_diagnosticsettings_name'))]",
+          "dependsOn": [
+            "[parameters('workflows_integration_formhub_name')]"
+          ],
+          "apiVersion": "2021-05-01-preview",
+          "properties": {
+            "name": "[parameters('workflows_integration_formshub_diagnosticsettings_name')]",
+            "workspaceId": "[parameters('workflows_integration_formshub_diagnosticsettings_workspaceid')]",
+            "logs": [
+              {
+                "categoryGroup": "allLogs",
+                "enabled": true,
+                "retentionPolicy": {
+                  "days": 0,
+                  "enabled": false
+                }
+              }
+            ],
+            "metrics": [
+              {
+                "category": "AllMetrics",
+                "enabled": true,
+                "retentionPolicy": {
+                  "days": 0,
+                  "enabled": false
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "tags": "[parameters('workflows_integration_formhub_tags')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "SBTopic": { 
+              "type": "String"
+            },
+            "SBSubscription": {
+              "type": "String"
+            },
+            "storageaccountname": {
+              "type": "String"
+            },
+            "emailto_registry": {
+              "type": "Array"
+            },
+            "emailto_a2j": {
+              "type": "Array"
+            },
+            "emailFrom": {
+              "type": "String"
+            },
+            "formNameMap": {
+              "type": "Object",
+              "defaultValue": {
+                "practising-certificate-new": "Practising Certificate New",
+                "australian-registration-certificate-renew": "Australian Registration Certificate Renewal",
+                "change-in-employment-details": "Change in Employment Details",
+                "australian-registration-certificate-new": "Australian Registration Certificate New",
+                "certificate-of-fitness": "Certificate of Fitness",
+                "presidential-appt-or-nomination-full-fee": "Presidential Appointment or Nomination (Full Fee)",
+                "presidential-appt-or-nomination-split-fee": "Presidential Appointment or Nomination (Split Fee)",
+                "law-society-mediation-program": "Law Society Mediation Program",
+                "family-law-settlement-service": "Family Law Settlement Service",
+                "lawyer-mediator-accreditation-scheme": "Lawyer Mediator Accreditation Scheme",
+                "lawyer-mediator-accreditation-scheme-payment": "Lawyer Mediator Accreditation Scheme"
+              }
+            },
+            "$connections": {
+              "type": "Object"
+            }
+          },
+          "triggers": {
+            "When_a_message_is_received_in_a_topic_subscription_(auto-complete)": {
+              "recurrence": {
+                "interval": 1,
+                "frequency": "Minute"
+              },
+              "evaluatedRecurrence": {
+                "interval": 1,
+                "frequency": "Minute"
+              },
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['servicebus']['connectionId']"
+                  }
+                },
+                "method": "get",
+                "path": "/@{encodeURIComponent(encodeURIComponent(parameters('SBTopic')))}/subscriptions/@{encodeURIComponent(parameters('SBSubscription'))}/messages/head",
+                "queries": {
+                  "subscriptionType": "Main"
+                }
+              }
+            }
+          },
+          "actions": {
+            "Try_Scope": {
+              "actions": {
+                "Parse_JSON": {
+                  "type": "ParseJson",
+                  "inputs": {
+                    "content": "@base64ToString(triggerBody()?['ContentData'])",
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "SubmissionId": {
+                          "type": "string"
+                        },
+                        "FormType": {
+                          "type": "string"
+                        },
+                        "ReceiptCategory": {
+                          "type": "string"
+                        },
+                        "LawSocietyId": {
+                          "type": "string"
+                        },
+                        "UserEmail": {
+                          "type": "string"
+                        },
+                        "UserName": {
+                          "type": "string"
+                        },
+                        "FirstName": {
+                          "type": ["string", "null"]
+                        },
+                        "MiddleOrOtherName": {
+                          "type": ["string", "null"]
+                        },
+                        "Surname": {
+                          "type": ["string", "null"]
+                        },
+                        "BusinessUnit": {
+                          "type": "string"
+                        },
+                        "Sku": {
+                          "type": "string"
+                        },
+                        "PaymentStatus": {
+                          "type": "string"
+                        },
+                        "StripeSessionId": {
+                          "type": "string"
+                        },
+                        "PaymentIntentId": {
+                          "type": ["string", "null"]
+                        },
+                        "TotalAmount": {
+                          "type": "number"
+                        },
+                        "NetAmount": {
+                          "type": "number"
+                        },
+                        "TotalGST": {
+                          "type": "number"
+                        },
+                        "AttachmentUrls": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "FormDataUrl": {
+                          "type": "string"
+                        },
+                        "ProcessedAt": {
+                          "type": "string"
+                        },
+                        "StripeInvoiceNumber": {
+                          "type": "string"
+                        },
+                        "TransactionDateAndTime": {
+                          "type": "string"
+                        },
+                        "CardholderName": {
+                          "type": "string"
+                        },
+                        "AllocationYear": {
+                          "type": "string"
+                        },
+                        "PaymentAllocations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "Description": {
+                                "type": "string"
+                              },
+                              "NetAmount": {
+                                "type": "number"
+                              },
+                              "Gst": {
+                                "type": "number"
+                              },
+                              "TotalAmount": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "Check_Payment_Status_Completed": {
+                  "actions": {
+                    "Loop_Attachments_URLs": {
+                      "foreach": "@body('Parse_JSON')?['AttachmentUrls']",
+                      "actions": {
+                        "Get_Form_Attachment_From_Blob": {
+                          "type": "ApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connection": {
+                                "name": "@parameters('$connections')['azureblob']['connectionId']"
+                              }
+                            },
+                            "method": "get",
+                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(parameters('storageaccountname')))}/GetFileContentByPath",
+                            "queries": {
+                              "path": "@join(skip(split(uriPath(items('Loop_Attachments_URLs')), '/'), 1), '/')\n",
+                              "inferContentType": true,
+                              "queryParametersSingleEncoded": true
+                            }
+                          }
+                        },
+                        "Append_to_Attachments_List": {
+                          "runAfter": {
+                            "Compose_Content": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "AppendToArrayVariable",
+                          "inputs": {
+                            "name": "attachmentsList",
+                            "value": {
+                              "name": "@{outputs('Compose_Attachment_Name')}",
+                              "contentType": "application/octet-stream",
+                              "contentInBase64": "@{outputs('Compose_Content')}"
+                            }
+                          }
+                        },
+                        "Compose_Attachment_Name": {
+                          "runAfter": {
+                            "Get_Form_Attachment_From_Blob": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Compose",
+                          "inputs": "@last(split(items('Loop_Attachments_URLs'), '/'))"
+                        },
+                        "Compose_Content": {
+                          "runAfter": {
+                            "Compose_Attachment_Name": [
+                              "Succeeded"
+                            ]
+                          },
+                          "type": "Compose",
+                          "inputs": "@base64(body('Get_Form_Attachment_From_Blob'))"
+                        }
+                      },
+                      "type": "Foreach",
+                      "runtimeConfiguration": {
+                        "concurrency": {
+                          "repetitions": 1
+                        }
+                      }
+                    },
+                    "Get_Raw_Form_Data_From_Blob": {
+                      "runAfter": {
+                        "Loop_Attachments_URLs": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                          }
+                        },
+                        "method": "get",
+                        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(parameters('storageaccountname')))}/GetFileContentByPath",
+                        "queries": {
+                          "path": "@join(skip(split(uriPath(body('Parse_JSON')?['FormDataUrl']), '/'), 1), '/')\n",
+                          "inferContentType": true,
+                          "queryParametersSingleEncoded": true
+                        }
+                      }
+                    },
+                    "Send_email": {
+                      "runAfter": {
+                        "Append_Form_Data": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "ApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connection": {
+                            "name": "@parameters('$connections')['acsemail']['connectionId']"
+                          }
+                        },
+                        "method": "post",
+                        "body": {
+                          "senderAddress": "@parameters('emailFrom')",
+                          "recipients": {
+                            "to": "@if(equals(toLower(body('Parse_JSON')?['ReceiptCategory']), 'registry'), parameters('emailto_registry'), parameters('emailto_a2j'))"
+                          },
+                          "content": {
+                            "subject": "@{parameters('formNameMap')[body('Parse_JSON')?['FormType']]} - @{concat(trim(coalesce(body('Parse_JSON')?['Surname'], '')), ', ', trim(coalesce(body('Parse_JSON')?['FirstName'], '')), if(empty(trim(coalesce(body('Parse_JSON')?['MiddleOrOtherName'], ''))), '', concat(' ', trim(body('Parse_JSON')?['MiddleOrOtherName']))))} - LawID: @{coalesce(body('Parse_JSON')?['LawSocietyId'], 'Unknown')}",
+                            "html": "<p class=\"editor-paragraph\"></p>"
+                          },
+                          "importance": "Normal",
+                          "attachments": "@variables('attachmentsList')"
+                        },
+                        "path": "/emails:sendGAVersion",
+                        "queries": {
+                          "api-version": "2023-03-31"
+                        }
+                      }
+                    },
+                    "Append_Form_Data": {
+                      "runAfter": {
+                        "Compose_1": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "AppendToArrayVariable",
+                      "inputs": {
+                        "name": "attachmentsList",
+                        "value": {
+                          "name": "eForm.pdf",
+                          "contentType": "application/pdf",
+                          "contentInBase64": "@{outputs('Compose_1')}"
+                        }
+                      }
+                    },
+                    "Compose_1": {
+                      "runAfter": {
+                        "Get_Raw_Form_Data_From_Blob": [
+                          "Succeeded"
+                        ]
+                      },
+                      "type": "Compose",
+                      "inputs": "@base64(body('Get_Raw_Form_Data_From_Blob'))"
+                    }
+                  },
+                  "runAfter": {
+                    "Parse_JSON": [
+                      "Succeeded"
+                    ]
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "expression": {
+                    "or": [
+                      {
+                        "equals": [
+                          "@body('Parse_JSON')?['PaymentStatus']",
+                          "@string('completed')"
+                        ]
+                      },
+                      {
+                        "equals": [
+                          "@body('Parse_JSON')?['PaymentStatus']",
+                          "@string('no_payment_required')"
+                        ]
+                      }
+                    ]
+                  },
+                  "type": "If"
+                }
+              },
+              "runAfter": {
+                "Initialize_Attachments_List": [
+                  "Succeeded"
+                ],
+                "Initialize_Raw_Form_Data_Variable": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Scope"
+            },
+            "Catch_Scope": {
+              "actions": {
+                "Terminate": {
+                  "type": "Terminate",
+                  "inputs": {
+                    "runStatus": "Failed",
+                    "runError": {
+                      "code": "99",
+                      "message": "Error processing form: @{parameters('formNameMap')[body('Parse_JSON')?['FormType']]} for Law ID: @{body('Parse_JSON')?['LawSocietyId']}"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Try_Scope": [
+                  "Failed"
+                ]
+              },
+              "type": "Scope"
+            },
+            "Initialize_Attachments_List": {
+              "runAfter": {},
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "attachmentsList",
+                    "type": "array",
+                    "value": []
+                  }
+                ]
+              }
+            },
+            "Initialize_Raw_Form_Data_Variable": {
+              "runAfter": {},
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "rawFormData",
+                    "type": "string",
+                    "value": "@{null}"
+                  }
+                ]
+              }
+            }
+          },
+          "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+            "value": "[parameters('workflows_integration_formhub_$connections')]"
+          },
+          "emailto_registry": {
+            "value": "[parameters('workflows_integration_formhub_emailto_registry')]"
+          },
+          "emailto_a2j": {
+            "value": "[parameters('workflows_integration_formhub_emailto_a2j')]"
+          },
+          "storageaccountname": {
+            "value": "[parameters('workflows_integration_formhub_storageaccountname')]"
+          },
+          "SBSubscription": {
+            "value": "[parameters('workflows_integration_formhub_SBSubscription')]"
+          },
+          "SBTopic": {
+            "value": "[parameters('workflows_integration_formhub_SBTopic')]"
+          },
+          "emailFrom": {
+            "value": "[parameters('workflows_integration_formhub_emailFrom')]"
+          }
+
+          }
+        }
+    }
+  ]
+}

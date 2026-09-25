@@ -1,0 +1,161 @@
+{
+  "routes": [
+    {
+      "route": "/api/*",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/certificate-of-fitness",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/family-law-settlement-service",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/presidential-appt-or-nomination-full-fee",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/presidential-appt-or-nomination-split-fee",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/law-society-mediation-program",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/lawyer-mediator-accreditation-scheme",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/lawyer-mediator-accreditation-scheme-payment",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/practising-certificate-new",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/australian-registration-certificate-renew",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/australian-registration-certificate-new",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/pc-merged",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/change-in-employment-details",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/update-employment-details",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+
+    {
+      "route": "/flss",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/presidential-appt-or-nomination",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/lawyer-mediator-accr-scheme",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/lma-payment",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/pc-new",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/pc-renew",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/pc-original",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/pc-variation",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/submission-success",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    },
+    {
+      "route": "/",
+      "rewrite": "/index.html",
+      "allowedRoles": [ "authenticated" ]
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/images/*.{png,jpg,gif,ico,svg}",
+      "/*.{css,scss,js}",
+      "/static/*",
+      "/.auth/*"
+    ]
+  },
+  "auth": {
+    "identityProviders": {
+      "customOpenIdConnectProviders": {
+        "aadb2c": {
+          "registration": {
+            "clientIdSettingName": "AADB2C_PROVIDER_CLIENT_ID",
+            "clientCredential": {
+              "clientSecretSettingName": "AADB2C_PROVIDER_CLIENT_SECRET"
+            },
+            "openIdConnectConfiguration": {
+              "wellKnownOpenIdConfiguration": "__WELL_KNOWN_OPENID_CONFIGURATION__"
+            }
+          },
+          "login": {
+            "nameClaimType": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
+            "scopes": [],
+            "loginParameterNames": []
+          }
+        }
+      }
+    }
+  },
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/aadb2c?post_login_redirect_uri=.referrer",
+      "statusCode": 302
+    }
+  }
+}

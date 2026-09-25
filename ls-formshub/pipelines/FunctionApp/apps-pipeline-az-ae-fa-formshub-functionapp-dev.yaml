@@ -1,0 +1,262 @@
+﻿steps:
+- checkout: self
+  clean: true
+  
+- task: UseDotNet@2
+  displayName: 'Use .NET 8 SDK'
+  inputs:
+    packageType: 'sdk'
+    version: '8.0.x'
+
+# Restore
+- task: DotNetCoreCLI@2
+  displayName: Restore
+  inputs:
+    command: restore
+    projects: '**/apps.sln'
+
+# Build
+- task: DotNetCoreCLI@2
+  displayName: Build
+  inputs:
+    command: build
+    projects: '**/api.csproj'
+    arguments: '--configuration Release'
+
+# Note: Vulnerability scanning handled by Wiz Scanner (branch policy)
+
+# Unit Tests (run BEFORE deployment)
+- task: DotNetCoreCLI@2
+  displayName: 'Run Unit Tests'
+  inputs:
+    command: test
+    projects: '**/FunctionApp.UnitTests.csproj'
+    arguments: '--configuration Release --logger trx --results-directory $(Build.ArtifactStagingDirectory)/TestResults'
+    publishTestResults: false
+
+- task: PublishTestResults@2
+  displayName: 'Publish Unit Test Results'
+  condition: always()
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '$(Build.ArtifactStagingDirectory)/TestResults/**/*.trx'
+    testRunTitle: 'Function App Unit Tests'
+
+# Publish (NO ZIP)
+- task: DotNetCoreCLI@2
+  displayName: Publish
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: '**/api.csproj'
+    arguments: >
+      --configuration Release
+      --output $(Build.ArtifactStagingDirectory)/publish/api
+
+# Fetch storage account connection string
+- task: AzureCLI@2
+  displayName: 'Fetch Storage Connection String'
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      echo "Fetching connection string for storage account: $(storageAccountName)"
+      echo "Resource group: $(resourceGroupName)"
+      
+      storageConnString=$(az storage account show-connection-string \
+        --name $(storageAccountName) \
+        --resource-group $(resourceGroupName) \
+        --query connectionString -o tsv 2>&1)
+      
+      exitCode=$?
+      if [ $exitCode -ne 0 ]; then
+        echo "##vso[task.logissue type=error]Failed to fetch storage connection string!"
+        echo "##vso[task.logissue type=error]Storage account: $(storageAccountName)"
+        echo "##vso[task.logissue type=error]Resource group: $(resourceGroupName)"
+        echo "##vso[task.logissue type=error]Error: $storageConnString"
+        exit 1
+      fi
+      
+      if [ -z "$storageConnString" ]; then
+        echo "##vso[task.logissue type=error]Storage connection string is empty!"
+        echo "##vso[task.logissue type=error]Check that storage account $(storageAccountName) exists in resource group $(resourceGroupName)"
+        exit 1
+      fi
+      
+      echo "✅ Successfully fetched storage connection string"
+      echo "##vso[task.setvariable variable=storageConnectionString;issecret=true]$storageConnString"
+
+# Publish app settings - COMPLETE SET (infrastructure + application)
+# This ensures settings persist even if infrastructure redeploys
+- task: AzureAppServiceSettings@1
+  displayName: 'Publish all Function App settings'
+  condition: and(always(), ne(variables['Build.Reason'], 'PullRequest'))
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    appName: $(functionAppName)
+    resourceGroupName: $(resourceGroupName) 
+    appSettings: |
+      [
+      {
+        "name": "AzureWebJobsStorage__accountName",
+        "value": "$(storageAccountName)",
+        "slotSetting": false
+      },
+      {
+        "name": "AzureWebJobsStorage__blobServiceUri",
+        "value": "https://$(storageAccountName).blob.core.windows.net",
+        "slotSetting": false
+      },
+      {
+        "name": "AzureWebJobsStorage__queueServiceUri",
+        "value": "https://$(storageAccountName).queue.core.windows.net",
+        "slotSetting": false
+      },
+      {
+        "name": "AzureWebJobsStorage__tableServiceUri",
+        "value": "https://$(storageAccountName).table.core.windows.net",
+        "slotSetting": false
+      },
+      {
+        "name": "StorageAccountName",
+        "value": "$(storageAccountName)",
+        "slotSetting": false
+      },
+      {
+        "name": "ServiceBusConnection__fullyQualifiedNamespace",
+        "value": "$(serviceBusNamespace).servicebus.windows.net",
+        "slotSetting": false
+      },
+      {
+        "name": "FeeRulesTableServiceUri",
+        "value": "https://$(storageAccountName).table.core.windows.net",
+        "slotSetting": false
+      },
+      {
+        "name": "ServiceBusTopicName",
+        "value": "forms-submission",
+        "slotSetting": false
+      },
+      {
+        "name": "blobContainerName",
+        "value": "forms-hub-blob",
+        "slotSetting": false
+      },
+      {
+        "name": "FeeRulesPCNewTableName",
+        "value": "FeeRulePCNew",
+        "slotSetting": false
+      },
+      {
+        "name": "FeeRulesPCOriginalTableName",
+        "value": "FeeRulePCOriginal",
+        "slotSetting": false
+      },
+      {
+        "name": "FeeRulesPCRenewTableName",
+        "value": "FeeRulePCRenew",
+        "slotSetting": false
+      },
+      {
+        "name": "FeeRulesPCVariationTableName",
+        "value": "FeeRulePCVariation",
+        "slotSetting": false
+      },
+      {
+        "name": "FeeRulesSimpleFormsTableName",
+        "value": "FeeRuleSimpleForms",
+        "slotSetting": false
+      },
+      {
+        "name": "FeeRulesCofTableName",
+        "value": "FeeRuleCof",
+        "slotSetting": false
+      },
+      {
+        "name": "StripeSecretKey",                    
+        "value": "@Microsoft.KeyVault(SecretUri=https://$(keyVaultName).vault.azure.net/secrets/StripeSecretKey)",
+        "slotSetting": false
+      },
+      {
+        "name": "StripeWebhookSecret",
+        "value": "@Microsoft.KeyVault(SecretUri=https://$(keyVaultName).vault.azure.net/secrets/StripeWebhookSecret)", 
+        "slotSetting": false
+      },
+       {
+          "name": "StripeTaxRateId",          
+          "value": "$(StripeTaxRateId)",
+          "slotSetting": false
+      },
+      {
+          "name": "ReceiptEmail_Registry",
+          "value": "mohit.gura@lawsociety.com.au",
+          "slotSetting": false
+      },
+      {
+          "name": "ReceiptEmail_A2J",
+          "value": "mohit.gura@lawsociety.com.au",
+          "slotSetting": false
+      },
+       {
+          "name": "currency",          
+          "value": "aud",
+          "slotSetting": false
+      },
+      {
+        "name": "country",
+        "value": "Australia/Sydney",
+        "slotSetting": false
+      },
+      {
+        "name": "timeZone",
+        "value": "AUS Eastern Standard Time",
+        "slotSetting": false
+      },
+      {
+        "name": "DateFormat",
+        "value": "yyyy-MM-ddTHH:mm:ss.fff+00:00",
+        "slotSetting": false
+      },
+      {
+        "name": "folderDateFormat",
+        "value": "yyyyMMdd-HHmmss",
+        "slotSetting": false
+      },
+      {
+        "name": "WEBSITE_ENABLE_SYNC_UPDATE_SITE",
+        "value": "true",
+        "slotSetting": false
+      },
+      {
+        "name": "SqlDbConnectionString",
+        "value": "Server=tcp:az-ae-sql-formshub-dev.database.windows.net,1433;Database=az-ae-sqldb-formshub-dev;Encrypt=True;TrustServerCertificate=False;Authentication=Active Directory Managed Identity;",
+        "slotSetting": false
+      }
+      ]
+
+# Deploy AFTER settings are configured
+- task: AzureCLI@2
+  displayName: 'Deploy Function App (Flex)'
+  condition: and(always(), ne(variables['Build.Reason'], 'PullRequest'))
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      echo "Installing Azure Functions Core Tools..."
+      npm install -g azure-functions-core-tools@4.6.0 --unsafe-perm true
+
+      echo "Deploying to Azure Function App..."
+      cd $(Build.ArtifactStagingDirectory)/publish/api
+      
+      # Extract the zip file if it exists
+      if [ -f *.zip ]; then
+        echo "Extracting zip file..."
+        unzip -q *.zip -d extracted
+        cd extracted
+      fi
+      
+      func azure functionapp publish $(functionAppName) --dotnet-isolated
+
+

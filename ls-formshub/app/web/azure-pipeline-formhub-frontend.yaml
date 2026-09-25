@@ -1,0 +1,108 @@
+name: formhub-frontend-deployments
+
+trigger:
+  branches:
+    include:
+      - main
+      - features/*
+  paths:
+    include:
+      - ls-formshub/app/web/**
+      - ls-formshub/pipelines/web/**
+      - ls-formshub/app/web/azure-pipeline-formhub-frontend.yaml
+    exclude:
+      - ls-formshub/app/az-ae-fa-formshub-functionapp/**
+      - ls-formshub/app/logicApp/**
+      - ls-formshub/pipelines/FunctionApp/**
+      - ls-formshub/pipelines/logicApp/**
+      - ls-formshub/pipelines/storageAccount/**
+
+pr: none
+
+variables:
+  - group: Integration-ServiceConnections
+
+stages:
+  # ==================== BUILD STAGE ====================
+  - stage: Build
+    displayName: Build Frontend
+    jobs:
+      - job: BuildFrontend
+        displayName: Build Static Web App
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - checkout: self
+            clean: true
+
+          - task: NodeTool@0
+            displayName: 'Use Node 20.x'
+            inputs:
+              versionSpec: '20.x'
+
+          - script: |
+              cd ls-formshub/app/web
+              npm install
+            displayName: 'npm install'
+
+          - script: |
+              cd ls-formshub/app/web
+              npm run build
+            displayName: 'npm build'
+
+          - script: |
+              cd ls-formshub/app/web
+              npm test -- --coverage --watchAll=false
+            displayName: 'npm test'
+
+  # ==================== DEPLOY DEV ====================
+  - stage: DeployDEV
+    displayName: Deploy Frontend (DEV)
+    dependsOn: Build
+    condition: succeeded()
+    variables:
+      - group: Integration-dev
+    jobs:
+      - template: '../../pipelines/web/swa_devops_pipeline_deploy.yml'
+        parameters:
+          environment: 'dev'
+          serviceConnection: $(serviceConnection-dev)
+
+  # ==================== DEPLOY SIT ====================
+  - stage: DeploySIT
+    displayName: Deploy Frontend (SIT)
+    dependsOn: []
+    condition: and(succeeded(),eq(variables['Build.Reason'], 'Manual'))   
+    variables:
+      - group: Integration-sit
+    jobs:
+      - template: '../../pipelines/web/swa_devops_pipeline_deploy.yml'
+        parameters:
+          environment: 'sit'
+          serviceConnection: $(serviceConnection-sit)
+
+  # ==================== DEPLOY UAT ====================
+  - stage: DeployUAT
+    displayName: Deploy Frontend (UAT)
+    dependsOn: []
+    condition: and(succeeded(),eq(variables['Build.Reason'], 'Manual'))
+    variables:
+      - group: Integration-uat
+    jobs:
+      - template: '../../pipelines/web/swa_devops_pipeline_deploy.yml'
+        parameters:
+          environment: 'uat'
+          serviceConnection: $(serviceConnection-uat)
+
+  # ==================== DEPLOY PRD ====================
+  - stage: DeployPRD
+    displayName: Deploy Frontend (PRD)
+    dependsOn: []
+    condition: and(succeeded(),eq(variables['Build.Reason'], 'Manual'))
+    variables:
+      - group: Integration-prd
+    jobs:
+      - template: '../../pipelines/web/swa_devops_pipeline_deploy.yml'
+        parameters:
+          environment: 'prd'
+          serviceConnection: $(serviceConnection-prd)
